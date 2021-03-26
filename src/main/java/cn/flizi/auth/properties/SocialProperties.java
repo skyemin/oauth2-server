@@ -10,6 +10,15 @@ public class SocialProperties {
 
     private WxMp wxMp = new WxMp();
     private WxOpen wxOpen = new WxOpen();
+    private Github github = new Github();
+
+    public Github getGithub() {
+        return github;
+    }
+
+    public void setGithub(Github github) {
+        this.github = github;
+    }
 
     public WxMp getWxMp() {
         return wxMp;
@@ -91,5 +100,34 @@ public class SocialProperties {
                 "wxMp=" + wxMp +
                 ", wxOpen=" + wxOpen +
                 '}';
+    }
+
+    public static class Github{
+        private String key;
+        private String secret;
+
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
+
+        public String getSecret() {
+            return secret;
+        }
+
+        public void setSecret(String secret) {
+            this.secret = secret;
+        }
+
+        @Override
+        public String toString() {
+            return "WxOpen{" +
+                    "key='" + key + '\'' +
+                    ", secret='" + secret + '\'' +
+                    '}';
+        }
     }
 }

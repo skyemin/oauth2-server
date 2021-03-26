@@ -71,6 +71,7 @@ public class MvcController {
         model.addAttribute("wx_mp", socialProperties.getWxMp().getKey());
         model.addAttribute("wx_open", socialProperties.getWxOpen().getKey());
         model.addAttribute("wx_auto", wx);
+        model.addAttribute("github", socialProperties.getGithub().getKey());
         return "login";
     }
 

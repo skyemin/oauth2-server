@@ -52,8 +52,11 @@ dingtalk:
 # 社会账号登录
 social:
   wx-mp: # 微信公众平台
-    key: 'xxx'
-    secret: 'xxx'
+    key: wxe6c0fab9766fb5b8
+    secret: 8ce83b31afcfe45f6c3f480ae329027c
   wx-open: # 微信开放平台
     key: 'xxx'
     secret: 'xxxx'
+  github:
+    key: 075683255eeea2b167c4
+    secret: 271c3ed0b724dd914ef78faf45e44fd91a836645

@@ -101,7 +101,8 @@
 <script>
     var wx_mp = '[[${wx_mp}]]';
     var wx_open = '[[${wx_open}]]';
-    var wx_auto = [[${wx_auto}]]
+    var wx_auto = [[${wx_auto}]];
+    var github = '[[${github}]]';
     function refreshCaptcha() {
         var captcha_id = document.getElementById("captcha_id")
         var key = new Date().getTime()
@@ -112,6 +113,11 @@
     function wxClick() {
         var ua = navigator.userAgent.toLowerCase();
         var isWx = ua.match(/MicroMessenger/i)=="micromessenger"
+        if(github != ''){
+            window.sessionStorage.setItem("type", "github")
+            window.location.href = `https://github.com/login/oauth/authorize?client_id=${github}&redirect_uri=${window.location.origin}%2Fauth-redirect`
+            return ;
+        }
         if (isWx) {
             window.sessionStorage.setItem("type", "WX_MP")
             window.location.href = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${wx_mp}&redirect_uri=${encodeURIComponent(window.location.origin)}%2Fauth-redirect&response_type=code&scope=snsapi_userinfo&state=authorize&connect_redirect=1#wechat_redirect`

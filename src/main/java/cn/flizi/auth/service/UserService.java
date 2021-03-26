@@ -59,7 +59,21 @@ public class UserService implements UserDetailsService, SocialDetailsService {
         if ("SMS".equals(type)) {
             user = smsHandler(code);
         }
-
+        //github登录
+        if("github".equals(type)){
+            String githubId = githubHandler(code);
+            if(githubId == null){
+                return null;
+            }
+            user = userMapper.loadUserByColumn("github_id", githubId);
+            if (user == null) {
+                user = new User();
+                user.setGithubId(githubId);
+                user.setPassword("{bcrypt}" + new BCryptPasswordEncoder()
+                        .encode(UUID.randomUUID().toString().replace("_", "")));
+                userMapper.insert(user);
+            }
+        }
         // 微信公众平台
         if ("WX_MP".equals(type)) {
             Map<String, String> map = wxMpHandler(code);
@@ -124,7 +138,7 @@ public class UserService implements UserDetailsService, SocialDetailsService {
                 socialProperties.getWxOpen().getKey(),
                 socialProperties.getWxOpen().getSecret(),
                 code);
-        Map<String, Object> map = getStringObjectMap(uri);
+        Map<String, Object> map = getStringObjectMap(uri,HttpMethod.POST);
         return (String) map.get("unionid");
     }
 
@@ -133,7 +147,7 @@ public class UserService implements UserDetailsService, SocialDetailsService {
                 socialProperties.getWxMp().getKey(),
                 socialProperties.getWxMp().getSecret(),
                 code);
-        Map<String, Object> map = getStringObjectMap(uri);
+        Map<String, Object> map = getStringObjectMap(uri,HttpMethod.POST);
         String openId = (String) map.get("openid");
         String unionId = (String) map.get("unionid");
 
@@ -143,10 +157,34 @@ public class UserService implements UserDetailsService, SocialDetailsService {
         return result;
     }
 
-    public Map<String, Object> getStringObjectMap(String url) {
+    public String githubHandler(String code) {
+        String uri = String.format("https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&code=%s",
+                socialProperties.getGithub().getKey(),
+                socialProperties.getGithub().getSecret(),
+                code);
+        Map<String, Object> map = getStringObjectMap(uri,HttpMethod.POST);
+        String accessToken = (String) map.get("access_token");
+        //获取用户信息
+        String githubUrl = "https://api.github.com/user";
+        Map<String, Object> map1 = getGithubMap(githubUrl,HttpMethod.GET,accessToken);
+        return (String) map1.get("id");
+    }
+    public Map<String, Object> getGithubMap(String url,HttpMethod httpMethod,String accessToken) {
+        List<String> authorizations = new ArrayList<>(2);
+        authorizations.add(accessToken);
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(new WxMappingJackson2HttpMessageConverter());
-        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(new HttpHeaders()),
+        return restTemplate.exchange(url, httpMethod, new HttpEntity<>(new HttpHeaders().put("Authorization",authorizations)),
+                new ParameterizedTypeReference<Map<String, Object>>() {
+                })
+                .getBody();
+    }
+
+
+    public Map<String, Object> getStringObjectMap(String url,HttpMethod httpMethod) {
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(new WxMappingJackson2HttpMessageConverter());
+        return restTemplate.exchange(url, httpMethod, new HttpEntity<>(new HttpHeaders()),
                 new ParameterizedTypeReference<Map<String, Object>>() {
                 })
                 .getBody();

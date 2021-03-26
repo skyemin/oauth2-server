@@ -7,6 +7,15 @@ public class User {
     private String email;
     private String wxOpenid;
     private String wxUnionid;
+    private String githubId;
+
+    public String getGithubId() {
+        return githubId;
+    }
+
+    public void setGithubId(String githubId) {
+        this.githubId = githubId;
+    }
 
     public String getUserId() {
         return userId;
