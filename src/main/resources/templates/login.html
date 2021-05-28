@@ -115,7 +115,7 @@
         var isWx = ua.match(/MicroMessenger/i)=="micromessenger"
         if(github != ''){
             window.sessionStorage.setItem("type", "github")
-            window.location.href = `https://github.com/login/oauth/authorize?client_id=${github}&redirect_uri=${window.location.origin}%2Fauth-redirect`
+            window.location.href = `https://gitee.com/oauth/authorize?client_id=${github}&response_type=code&redirect_uri=${window.location.origin}%2Fauth-redirect`
             return ;
         }
         if (isWx) {

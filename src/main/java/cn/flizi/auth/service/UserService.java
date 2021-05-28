@@ -7,6 +7,7 @@ import cn.flizi.auth.mapper.UserMapper;
 import cn.flizi.auth.properties.SocialProperties;
 import cn.flizi.auth.security.AuthUser;
 import cn.flizi.auth.security.social.SocialDetailsService;
+import cn.hutool.http.HttpUtil;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.*;
 import java.util.*;
 
 @Service
@@ -61,7 +65,7 @@ public class UserService implements UserDetailsService, SocialDetailsService {
         }
         //github登录
         if("github".equals(type)){
-            String githubId = githubHandler(code);
+            String githubId = githubHandler(code,redirectUri);
             if(githubId == null){
                 return null;
             }
@@ -157,31 +161,41 @@ public class UserService implements UserDetailsService, SocialDetailsService {
         return result;
     }
 
-    public String githubHandler(String code) {
-        String uri = String.format("https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&code=%s",
+    public String githubHandler(String code,String redirectUri) {
+       /* String proxy = "a.xyms.online";  // 100.100.101.235 8811  示例，里面填具体的代理ip
+        int port = 8800;   //代理的端口，*/
+/*        System.setProperty("proxyType", "4");
+        System.setProperty("proxyPort", Integer.toString(port));
+        System.setProperty("proxyHost", proxy);
+        System.setProperty("proxySet", "true");*/
+        String uri = String.format("https://gitee.com/oauth/token?grant_type=authorization_code&code=%s&client_id=%s&redirect_uri=%s&client_secret=%s",
+                code,
                 socialProperties.getGithub().getKey(),
-                socialProperties.getGithub().getSecret(),
-                code);
+                "http://localhost:8080/auth-redirect",
+                socialProperties.getGithub().getSecret());
+  /*      String s = HttpUtil.post(uri,"");
+        String s = HttpUtil.get(uri);
+        System.out.println(s);*/
         Map<String, Object> map = getStringObjectMap(uri,HttpMethod.POST);
         String accessToken = (String) map.get("access_token");
         //获取用户信息
-        String githubUrl = "https://api.github.com/user";
+        String githubUrl = "https://gitee.com/api/v5/user";
         Map<String, Object> map1 = getGithubMap(githubUrl,HttpMethod.GET,accessToken);
-        return (String) map1.get("id");
+        return map1.get("id").toString();
     }
     public Map<String, Object> getGithubMap(String url,HttpMethod httpMethod,String accessToken) {
-        List<String> authorizations = new ArrayList<>(2);
-        authorizations.add(accessToken);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(new WxMappingJackson2HttpMessageConverter());
-        return restTemplate.exchange(url, httpMethod, new HttpEntity<>(new HttpHeaders().put("Authorization",authorizations)),
+        return restTemplate.exchange(url, httpMethod, new HttpEntity<>(headers),
                 new ParameterizedTypeReference<Map<String, Object>>() {
                 })
                 .getBody();
     }
 
 
-    public Map<String, Object> getStringObjectMap(String url,HttpMethod httpMethod) {
+    public static Map<String, Object> getStringObjectMap(String url, HttpMethod httpMethod) {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(new WxMappingJackson2HttpMessageConverter());
         return restTemplate.exchange(url, httpMethod, new HttpEntity<>(new HttpHeaders()),
@@ -197,5 +211,19 @@ public class UserService implements UserDetailsService, SocialDetailsService {
             mediaTypes.add(MediaType.TEXT_HTML);  // 解决微信问题:  放回格式是 text/plain 的问题
             setSupportedMediaTypes(mediaTypes);
         }
+    }
+
+    public static void main(String[] args) throws IOException {
+        String url = "https://github.com/",
+                proxy = "a.xyms.online",
+                port = "8800";
+        URL server = new URL(url);
+        Properties systemProperties = System.getProperties();
+        systemProperties.setProperty("http.proxyHost",proxy);
+        systemProperties.setProperty("http.proxyPort",port);
+        HttpURLConnection connection = (HttpURLConnection)server.openConnection();
+        connection.connect();
+        InputStream in = connection.getInputStream();
+        System.out.println(in);
     }
 }
